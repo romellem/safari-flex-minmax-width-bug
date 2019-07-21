@@ -1,1 +1,141 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>Safari grow bug</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            /* _Must_ have a nested flex container */
+            .header {
+                display: flex;
+            }
 
+            .nav {
+                display: flex;
+            }
+
+            .item {
+                flex: 0 1 auto;
+            }
+
+
+            /* Misc stylings */
+            .header {
+                background: gainsboro;
+                padding: 1em;
+            }
+            .nav {
+                align-items: center;
+                background: silver;
+                padding: 1em;
+            }
+            .item {
+                background: yellow;
+            }
+            .item--special {
+                background: cyan;
+                position: relative;
+            }
+            .item + .item {
+                margin-left: 5px;
+            }
+            .item--special::before,
+            .item--special::after {
+                display: block;
+                position: absolute;
+
+                color: red;
+                font-size: 0.5em;
+                line-height: 10px;
+            }
+            .item--special::before {
+                content: "min-width: " attr(data-min-width);
+                top: -10px;
+            }
+            .item--special::after {
+                content: "max-width: " attr(data-max-width);
+                display: block;
+                bottom: -10px
+            }
+        </style>
+    </head>
+    <body>
+        <p>
+            When Safari (Desktop or iOS) has a flex container nested in another flex container,
+            with its children set to the default <code>flex: 0 1 auto</code>, and one of those
+            child elements has a <code>min-width</code> set larger than it's <code>max-width</code>,
+            then Safari sizes the other <code>auto</code> sibling elements incorrectly.
+        </p>
+
+        <h1>Enter min and max width values to change the "special" element's sizing</h1>
+        <label>Min width: <input type="number" id="min" value="150"></label>
+        <label>Max width: <input type="number" id="max" value="100"></label>
+
+        <hr>
+
+        <h3>Regular - Does <em>not</em> have <code>min-width</code> applied to special item</h3>
+        <div class="header">
+            <div class="nav">
+                <div class="item">Item 1</div>
+                <div class="item">Item 2 Lorem ipsum</div>
+                <div class="item">Item 3 dolor sit amet</div>
+                <div class="item">Item 4 consectetur adipisicing elit</div>
+                <div class="item item--special">Special Item with text that will wrap</div>
+            </div>
+        </div>
+
+        <h3>Bugged - <em>Does</em> have <code>min-width</code> applied to special item</h3>
+        <div class="header">
+            <div class="nav nav--bug">
+                <div class="item">Item 1</div>
+                <div class="item">Item 2 Lorem ipsum</div>
+                <div class="item">Item 3 dolor sit amet</div>
+                <div class="item">Item 4 consectetur adipisicing elit</div>
+                <div class="item item--special">Special Item with text that will wrap</div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var min = document.getElementById('min');
+                var max = document.getElementById('max');
+
+                var special_item_bugged = document.querySelector('.nav--bug .item--special');
+                var special_item_regular = document.querySelector('.nav:not(.nav--bug) .item--special');
+
+                function updateSpecialItemMinWidth() {
+                    var min_value = min.value + 'px';
+
+                    // Only update bugged item's min width
+                    special_item_bugged.style.minWidth = min_value;
+
+                    // Use data-set for pseudo elements
+                    special_item_bugged.dataset.minWidth = min_value;
+                    special_item_regular.dataset.minWidth = 'auto';
+                }
+
+                function updateSpecialItemMaxWidth() {
+                    var max_value = max.value + 'px';
+
+                    special_item_bugged.style.maxWidth = max_value;
+                    special_item_regular.style.maxWidth = max_value;
+
+                    // Use data-set for pseudo elements
+                    special_item_bugged.dataset.maxWidth = max_value;
+                    special_item_regular.dataset.maxWidth = max_value;
+                }
+
+                min.addEventListener('input', updateSpecialItemMinWidth);
+                min.addEventListener('change', updateSpecialItemMinWidth);
+                max.addEventListener('input', updateSpecialItemMaxWidth);
+                max.addEventListener('change', updateSpecialItemMaxWidth);
+
+                // Set inline styles on load
+                updateSpecialItemMinWidth();
+                updateSpecialItemMaxWidth()
+            });
+        </script>
+    </body>
+</html>
