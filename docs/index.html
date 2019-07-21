@@ -56,7 +56,6 @@
             }
             .item--special::after {
                 content: "max-width: " attr(data-max-width);
-                display: block;
                 bottom: -10px
             }
         </style>
@@ -73,7 +72,7 @@
         <label>Min width: <input type="number" id="min" value="150"></label>
         <label>Max width: <input type="number" id="max" value="100"></label>
 
-        <hr>
+        <hr id="before-browser-version">
 
         <h3>Regular - Does <em>not</em> have <code>min-width</code> applied to special item</h3>
         <div class="header">
@@ -134,7 +133,18 @@
 
                 // Set inline styles on load
                 updateSpecialItemMinWidth();
-                updateSpecialItemMaxWidth()
+                updateSpecialItemMaxWidth();
+            });
+        </script>
+
+        <!-- Browser version for Screenshot purposes -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Detect.js/2.2.2/detect.min.js" integrity="sha256-IqZ3kM5rZjLAwXgOXJ7a39e14wZwUhPfo2l52VCP5kU=" crossorigin="anonymous"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var ua = detect.parse(navigator.userAgent);
+                var hr = document.getElementById('before-browser-version');
+
+                hr.insertAdjacentHTML('afterend', '<h2>Browser: ' + ua.device.type + ' ' + ua.browser.name + '</h2>');
             });
         </script>
     </body>
