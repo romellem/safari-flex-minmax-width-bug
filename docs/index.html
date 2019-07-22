@@ -37,8 +37,7 @@
                 background: silver;
             }
             .header::before,
-            .nav::before,
-            .item:not(.item--special)::before {
+            .nav::before {
                 font-family: monospace;
                 font-size: 0.5em;
                 font-weight: bold;
@@ -48,15 +47,12 @@
                 top: 0.5em;
                 left: 2px;
 
-                content: "class=" attr(class);
+                content: "." attr(class);
 
                 color: palevioletred;
             }
             .item {
-                position: relative;
-
                 background: yellow;
-                padding: 1em;
             }
             .item--special {
                 position: relative;
@@ -179,8 +175,8 @@
                     bugged_max: bugged_max_checkbox.checked,
                 };
 
-                var special_item_bugged = document.querySelector('#nav .item--special');
-                var special_item_regular = document.querySelector('#nav-bug .item--special');
+                var special_item_bugged = document.querySelector('#nav-bug .item--special');
+                var special_item_regular = document.querySelector('#nav .item--special');
 
                 var checkboxes_and_state = [
                     [regular_min_checkbox, 'regular_min'],
