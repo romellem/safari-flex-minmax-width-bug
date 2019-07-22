@@ -7,7 +7,6 @@
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>
-            /* _Must_ have a nested flex container */
             .header {
                 display: flex;
             }
@@ -20,43 +19,84 @@
                 flex: 0 1 auto;
             }
 
-
             /* Misc stylings */
             .header {
-                background: gainsboro;
+                position: relative;
+
                 padding: 1em;
+
+                background: gainsboro;
             }
             .nav {
+                position: relative;
+
                 align-items: center;
-                background: silver;
+
                 padding: 1em;
+
+                background: silver;
+            }
+            .header::before,
+            .nav::before,
+            .item:not(.item--special)::before {
+                font-family: monospace;
+                font-size: 0.5em;
+                font-weight: bold;
+                line-height: 1;
+
+                position: absolute;
+                top: 0.5em;
+                left: 2px;
+
+                content: "class=" attr(class);
+
+                color: palevioletred;
             }
             .item {
+                position: relative;
+
                 background: yellow;
+                padding: 1em;
             }
             .item--special {
-                background: cyan;
                 position: relative;
+
+                background: cyan;
             }
+
             .item + .item {
                 margin-left: 5px;
             }
+
+            label {
+                display: inline-block;
+            }
+            label + .header {
+                margin-top: 10px;
+            }
+            .header + label {
+                margin-top: 20px;
+            }
             .item--special::before,
             .item--special::after {
-                display: block;
-                position: absolute;
-
-                color: red;
                 font-size: 0.5em;
                 line-height: 10px;
+
+                position: absolute;
+
+                display: block;
+
+                color: red;
             }
             .item--special::before {
-                content: "min-width: " attr(data-min-width);
                 top: -10px;
+
+                content: "min-width: " attr(data-min-width);
             }
             .item--special::after {
+                bottom: -10px;;
+
                 content: "max-width: " attr(data-max-width);
-                bottom: -10px
             }
         </style>
     </head>
@@ -67,6 +107,19 @@
             child elements has a <code>min-width</code> set larger than it's <code>max-width</code>,
             then Safari sizes the other <code>auto</code> sibling elements incorrectly.
         </p>
+        <pre id="code">
+.header {
+    display: flex;
+}
+
+.nav {
+    display: flex;
+}
+
+.item {
+    flex: 0 1 auto;
+}
+</pre>
 
         <h1>Enter min and max width values to change the "special" element's sizing</h1>
         <label>Min width: <input type="number" id="min" value="150"></label>
@@ -74,9 +127,10 @@
 
         <hr id="before-browser-version">
 
-        <h3>Regular - Does <em>not</em> have <code>min-width</code> applied to special item</h3>
+        <label>Apply <code>min-width</code> <input type="checkbox" id="regular-min" name="regular-checkboxes"></label><br>
+        <label>Apply <code>max-width</code> <input type="checkbox" id="regular-max" name="regular-checkboxes" checked></label>
         <div class="header">
-            <div class="nav">
+            <div id="nav" class="nav">
                 <div class="item">Item 1</div>
                 <div class="item">Item 2 Lorem ipsum</div>
                 <div class="item">Item 3 dolor sit amet</div>
@@ -85,9 +139,10 @@
             </div>
         </div>
 
-        <h3>Bugged - <em>Does</em> have <code>min-width</code> applied to special item</h3>
+        <label>Apply <code>min-width</code> <input type="checkbox" id="bugged-min" name="bugged-checkboxes" checked></label><br>
+        <label>Apply <code>max-width</code> <input type="checkbox" id="bugged-max" name="bugged-checkboxes" checked></label>
         <div class="header">
-            <div class="nav nav--bug">
+            <div id="nav-bug" class="nav">
                 <div class="item">Item 1</div>
                 <div class="item">Item 2 Lorem ipsum</div>
                 <div class="item">Item 3 dolor sit amet</div>
@@ -112,29 +167,56 @@
                 var min = document.getElementById('min');
                 var max = document.getElementById('max');
 
-                var special_item_bugged = document.querySelector('.nav--bug .item--special');
-                var special_item_regular = document.querySelector('.nav:not(.nav--bug) .item--special');
+                var regular_min_checkbox = document.getElementById('regular-min');
+                var regular_max_checkbox = document.getElementById('regular-max');
+                var bugged_min_checkbox = document.getElementById('bugged-min');
+                var bugged_max_checkbox = document.getElementById('bugged-max');
+
+                var state = {
+                    regular_min: regular_min_checkbox.checked,
+                    regular_max: regular_max_checkbox.checked,
+                    bugged_min: bugged_min_checkbox.checked,
+                    bugged_max: bugged_max_checkbox.checked,
+                };
+
+                var special_item_bugged = document.querySelector('#nav .item--special');
+                var special_item_regular = document.querySelector('#nav-bug .item--special');
+
+                var checkboxes_and_state = [
+                    [regular_min_checkbox, 'regular_min'],
+                    [regular_max_checkbox, 'regular_max'],
+                    [bugged_min_checkbox, 'bugged_min'],
+                    [bugged_max_checkbox, 'bugged_max'],
+                ];
+
+                checkboxes_and_state.forEach(function(arr) {
+                    var checkbox = arr[0];
+                    var state_key = arr[1];
+
+                    checkbox.addEventListener('change', function() {
+                        state[state_key] = this.checked;
+
+                        updateSpecialItemMinWidth();
+                        updateSpecialItemMaxWidth();
+                    })
+                });
 
                 function updateSpecialItemMinWidth() {
                     var min_value = min.value + 'px';
 
-                    // Only update bugged item's min width
-                    special_item_bugged.style.minWidth = min_value;
-
-                    // Use data-set for pseudo elements
-                    special_item_bugged.dataset.minWidth = min_value;
-                    special_item_regular.dataset.minWidth = 'auto';
+                    special_item_regular.style.minWidth = state.regular_min ? min_value : null;
+                    special_item_regular.dataset.minWidth = state.regular_min ? min_value : 'auto';
+                    special_item_bugged.style.minWidth = state.bugged_min ? min_value : null;
+                    special_item_bugged.dataset.minWidth = state.bugged_min ? min_value : 'auto';
                 }
 
                 function updateSpecialItemMaxWidth() {
                     var max_value = max.value + 'px';
 
-                    special_item_bugged.style.maxWidth = max_value;
-                    special_item_regular.style.maxWidth = max_value;
-
-                    // Use data-set for pseudo elements
-                    special_item_bugged.dataset.maxWidth = max_value;
-                    special_item_regular.dataset.maxWidth = max_value;
+                    special_item_regular.style.maxWidth = state.regular_max ? max_value : null;
+                    special_item_regular.dataset.maxWidth = state.regular_max ? max_value : 'auto';
+                    special_item_bugged.style.maxWidth = state.bugged_max ? max_value : null;
+                    special_item_bugged.dataset.maxWidth = state.bugged_max ? max_value : 'auto';
                 }
 
                 min.addEventListener('input', updateSpecialItemMinWidth);
